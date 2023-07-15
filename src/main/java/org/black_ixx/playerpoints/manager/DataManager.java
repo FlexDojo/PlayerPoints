@@ -1,114 +1,174 @@
 package org.black_ixx.playerpoints.manager;
 
-import com.google.common.collect.Iterables;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.database.DataMigration;
 import dev.rosewood.rosegarden.database.SQLiteConnector;
 import dev.rosewood.rosegarden.manager.AbstractDataManager;
+import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.database.migrations._1_Create_Tables;
 import org.black_ixx.playerpoints.database.migrations._2_Add_Table_Username_Cache;
-import org.black_ixx.playerpoints.listeners.PointsMessageListener;
-import org.black_ixx.playerpoints.manager.ConfigurationManager.Setting;
-import org.black_ixx.playerpoints.models.PendingTransaction;
-import org.black_ixx.playerpoints.models.PointsValue;
+import org.black_ixx.playerpoints.manager.data.UserData;
 import org.black_ixx.playerpoints.models.SortedPlayer;
+import org.black_ixx.playerpoints.util.TransactionType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class DataManager extends AbstractDataManager implements Listener {
 
-    private final Map<UUID, PointsValue> pointsCache;
-    private final Map<UUID, Deque<PendingTransaction>> pendingTransactions;
-    private final Map<UUID, String> pendingUsernameUpdates;
+    private final PlayerPoints plugin;
+    private final Map<UUID, UserData> userDataCache;
 
-    public DataManager(RosePlugin rosePlugin) {
-        super(rosePlugin);
+    public DataManager(RosePlugin plugin) {
+        super(plugin);
 
-        this.pointsCache = new ConcurrentHashMap<>();
-        this.pendingTransactions = new ConcurrentHashMap<>();
-        this.pendingUsernameUpdates = new ConcurrentHashMap<>();
+        this.plugin = (PlayerPoints) plugin;
+
+        this.userDataCache = new ConcurrentHashMap<>();
+
 
         Bukkit.getPluginManager().registerEvents(this, rosePlugin);
-        Bukkit.getScheduler().runTaskTimerAsynchronously(rosePlugin, this::update, 10L, 10L);
+
+    }
+
+    public void loadOnlinePlayers() {
+        Bukkit.getOnlinePlayers().forEach(player -> loadUser(player.getUniqueId()).thenAccept(data -> {
+
+            if (data == null) {
+                data = new UserData(player.getUniqueId(), player.getName(), 0);
+                plugin.getQueries().createData(data);
+            }
+
+            plugin.getLogger().info("Loaded " + data.getName() + " (" + data.getUuid() + ") with " + data.getPoints() + " points.");
+
+            this.userDataCache.put(player.getUniqueId(), data);
+        }));
     }
 
     @Override
     public void disable() {
-        this.update();
-
-        this.pointsCache.clear();
-        this.pendingTransactions.clear();
-        this.pendingUsernameUpdates.clear();
 
         super.disable();
     }
 
-    /**
-     * Pushes any points changes to the database and removes stale cache entries
-     */
-    private void update() {
-        // Push any points changes to the database
-        Map<UUID, Integer> transactions = new HashMap<>();
-        Map<UUID, Deque<PendingTransaction>> processingPendingTransactions;
-        synchronized (this.pendingTransactions) {
-            processingPendingTransactions = new HashMap<>(this.pendingTransactions);
-            this.pendingTransactions.clear();
-        }
+    public UserData getOnlineData(Player player) {
+        return this.userDataCache.get(player.getUniqueId());
+    }
 
-        for (Map.Entry<UUID, Deque<PendingTransaction>> entry : processingPendingTransactions.entrySet()) {
-            UUID uuid = entry.getKey();
-            int points = this.getEffectivePoints(uuid, entry.getValue());
-            this.pointsCache.put(uuid, new PointsValue(points));
-            transactions.put(uuid, points);
-        }
+    public UserData getOnlineData(UUID uuid) {
+        return this.userDataCache.getOrDefault(uuid, null);
+    }
 
-        if (!transactions.isEmpty())
-            this.updatePoints(transactions);
-
-        // Remove stale cache entries
-        synchronized (this.pointsCache) {
-            this.pointsCache.values().removeIf(PointsValue::isStale);
-        }
-
-        synchronized (this.pendingUsernameUpdates) {
-            if (!this.pendingUsernameUpdates.isEmpty()) {
-                this.updateCachedUsernames(this.pendingUsernameUpdates);
-                this.pendingUsernameUpdates.clear();
-            }
+    public CompletableFuture<UserData> getUserData(UUID uuid) {
+        if (this.userDataCache.containsKey(uuid)) {
+            return CompletableFuture.completedFuture(this.userDataCache.get(uuid));
+        } else {
+            return loadUser(uuid);
         }
     }
+
+    public CompletableFuture<UserData> getUserData(String name) {
+        Optional<UserData> opt = userDataCache.values().stream().filter(d -> d.getName().equals(name)).findFirst();
+        return opt.map(CompletableFuture::completedFuture).orElseGet(() -> loadUser(name));
+    }
+
+    public CompletableFuture<UserData> loadUser(UUID uuid) {
+        return plugin.getQueries().loadUser(uuid);
+    }
+
+    public CompletableFuture<UserData> loadUser(String name) {
+        return plugin.getQueries().loadUser(name);
+    }
+
+    public CompletableFuture<Boolean> setPoints(UUID uuid, double points) {
+        return updatePoints(getUserData(uuid), points, 2);
+    }
+
+    public CompletableFuture<Boolean> setPoints(String name, double points) {
+        return updatePoints(getUserData(name), points, 2);
+    }
+
+    public CompletableFuture<Boolean> givePoints(UUID uuid, double points) {
+        return updatePoints(getUserData(uuid), points, 0);
+    }
+
+    public CompletableFuture<Boolean> givePoints(String name, double points) {
+        return updatePoints(getUserData(name), points, 0);
+    }
+
+    public CompletableFuture<Boolean> takePoints(UUID uuid, double points) {
+        return updatePoints(getUserData(uuid), points, 1);
+    }
+
+    public CompletableFuture<Boolean> takePoints(String name, double points) {
+        return updatePoints(getUserData(name), points, 1);
+    }
+
+    private CompletableFuture<Boolean> updatePoints(CompletableFuture<UserData> userData, double points, int action) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        if (userData == null) {
+            future.complete(false);
+            return future;
+        }
+        userData.thenAccept(data -> {
+            if (data == null) {
+                future.complete(false);
+                return;
+            }
+
+            boolean online = Bukkit.getPlayer(data.getUuid()) != null;
+
+            switch (action) {
+                case 0 -> {
+                    data.setPoints(data.getPoints() + points);
+                    if (!online) plugin.getRedis().publish(data.getName(), data.getPoints(), TransactionType.GIVE);
+                }
+                case 1 -> {
+                    data.setPoints(Math.max(0, data.getPoints() - points));
+                    if (!online) plugin.getRedis().publish(data.getName(), data.getPoints(), TransactionType.TAKE);
+                }
+                case 2 -> {
+                    data.setPoints(points);
+                    if (!online) plugin.getRedis().publish(data.getName(), data.getPoints(), TransactionType.SET);
+                }
+            }
+            plugin.getQueries().updateData(data);
+            future.complete(true);
+        });
+        return future;
+    }
+
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
-            this.pointsCache.put(event.getUniqueId(), new PointsValue(this.getPoints(event.getUniqueId())));
-        }
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+
+        loadUser(event.getUniqueId()).thenAccept(data -> {
+            if (data == null) {
+                data = new UserData(event.getUniqueId(), event.getName(), 0);
+                plugin.getQueries().createData(data);
+            }
+            userDataCache.put(event.getUniqueId(), data);
+        });
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        this.pendingUsernameUpdates.put(player.getUniqueId(), player.getName());
-        this.update();
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        userDataCache.remove(event.getPlayer().getUniqueId());
     }
 
     /**
@@ -118,96 +178,11 @@ public class DataManager extends AbstractDataManager implements Listener {
      * @return the effective points value
      */
     public int getEffectivePoints(UUID playerId) {
-        return this.getEffectivePoints(playerId, this.pendingTransactions.get(playerId));
+        Player player = Bukkit.getPlayer(playerId);
+        if (player == null) return 0;
+        return (int) getOnlineData(player).getPoints();
     }
 
-    private int getEffectivePoints(UUID playerId, Deque<PendingTransaction> transactions) {
-        // Get the cached amount or fetch it fresh from the database
-        int points;
-        if (this.pointsCache.containsKey(playerId)) {
-            points = this.pointsCache.get(playerId).getValue();
-        } else {
-            points = this.getPoints(playerId);
-            this.pointsCache.put(playerId, new PointsValue(points));
-        }
-
-        // Apply any pending transactions
-        if (transactions != null) {
-            for (PendingTransaction transaction : transactions) {
-                switch (transaction.getType()) {
-                    case SET:
-                        points = transaction.getAmount();
-                        break;
-
-                    case OFFSET:
-                        points += transaction.getAmount();
-                        break;
-                }
-            }
-        }
-
-        return points;
-    }
-
-    /**
-     * Refreshes a player's points to the value in the database if they are online
-     *
-     * @param uuid The player's UUID
-     */
-    public void refreshPoints(UUID uuid) {
-        if (this.pointsCache.containsKey(uuid))
-            Bukkit.getScheduler().runTaskAsynchronously(this.rosePlugin, () -> this.pointsCache.put(uuid, new PointsValue(this.getPoints(uuid))));
-    }
-
-    /**
-     * Performs a database query and hangs the current thread, also caches the points entry
-     *
-     * @param playerId The UUID of the Player
-     * @return the amount of points the Player has
-     */
-    public int getPoints(UUID playerId) {
-        AtomicInteger value = new AtomicInteger();
-        AtomicBoolean generate = new AtomicBoolean(false);
-        this.databaseConnector.connect(connection -> {
-            String query = "SELECT points FROM " + this.getPointsTableName() + " WHERE " + this.getUuidColumnName() + " = ?";
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setString(1, playerId.toString());
-                ResultSet result = statement.executeQuery();
-                if (result.next()) {
-                    value.set(result.getInt(1));
-                } else {
-                    generate.set(true);
-                }
-            }
-        });
-
-        if (generate.get()) {
-            int startingBalance = Setting.STARTING_BALANCE.getInt();
-            this.setPoints(playerId, startingBalance);
-            value.set(startingBalance);
-        }
-
-        return value.get();
-    }
-
-    private Deque<PendingTransaction> getPendingTransactions(UUID playerId) {
-        return this.pendingTransactions.computeIfAbsent(playerId, x -> new ConcurrentLinkedDeque<>());
-    }
-
-    /**
-     * Adds a pending transaction to set the player's points to a specified amount
-     *
-     * @param playerId The Player to set the points of
-     * @param amount   The amount to set to
-     * @return true if the transaction was successful, false otherwise
-     */
-    public boolean setPoints(UUID playerId, int amount) {
-        if (amount < 0)
-            return false;
-
-        this.getPendingTransactions(playerId).add(new PendingTransaction(PendingTransaction.TransactionType.SET, amount));
-        return true;
-    }
 
     /**
      * Adds a pending transaction to offset the player's points by a specified amount
@@ -221,99 +196,21 @@ public class DataManager extends AbstractDataManager implements Listener {
         if (points + amount < 0)
             return false;
 
-        this.getPendingTransactions(playerId).add(new PendingTransaction(PendingTransaction.TransactionType.OFFSET, amount));
         return true;
     }
 
-    private void updatePoints(Map<UUID, Integer> transactions) {
-        this.databaseConnector.connect(connection -> {
-            String query = "REPLACE INTO " + this.getPointsTableName() + " (" + this.getUuidColumnName() + ", points) VALUES (?, ?)";
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                for (Map.Entry<UUID, Integer> entry : transactions.entrySet()) {
-                    statement.setString(1, entry.getKey().toString());
-                    statement.setInt(2, Math.max(0, entry.getValue()));
-                    statement.addBatch();
-
-                    // Update cached value
-                    this.pointsCache.computeIfAbsent(entry.getKey(), x -> new PointsValue(entry.getValue())).setValue(entry.getValue());
-
-                    // Send update to BungeeCord if enabled
-                    if (Setting.BUNGEECORD_SEND_UPDATES.getBoolean() && this.rosePlugin.isEnabled()) {
-                        ByteArrayDataOutput output = ByteStreams.newDataOutput();
-                        output.writeUTF("Forward");
-                        output.writeUTF("ALL");
-                        output.writeUTF(PointsMessageListener.REFRESH_SUBCHANNEL);
-
-                        byte[] bytes = entry.getKey().toString().getBytes(StandardCharsets.UTF_8);
-                        output.writeShort(bytes.length);
-                        output.write(bytes);
-
-                        Player attachedPlayer = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
-                        if (attachedPlayer != null)
-                            attachedPlayer.sendPluginMessage(this.rosePlugin, PointsMessageListener.CHANNEL, output.toByteArray());
-                    }
-                }
-                statement.executeBatch();
-            }
-        });
-    }
 
     public boolean offsetAllPoints(int amount) {
         if (amount == 0)
             return true;
 
-        this.databaseConnector.connect(connection -> {
-            String function = this.databaseConnector instanceof SQLiteConnector ? "MAX" : "GREATEST";
-            String query = "UPDATE " + this.getPointsTableName() + " SET points = " + function + "(0, points + ?)";
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
-                statement.setInt(1, amount);
-                statement.executeUpdate();
-            }
-        });
-
-        for (Player player : Bukkit.getOnlinePlayers())
-            if (this.pointsCache.containsKey(player.getUniqueId()))
-                this.offsetPoints(player.getUniqueId(), amount);
+        plugin.getQueries().giveAll(amount);
 
         return true;
     }
 
-    public boolean doesDataExist() {
-        AtomicInteger count = new AtomicInteger();
-        this.databaseConnector.connect(connection -> {
-            try (Statement statement = connection.createStatement()) {
-                ResultSet result = statement.executeQuery("SELECT COUNT(*) FROM " + this.getPointsTableName());
-                result.next();
-                count.set(result.getInt(1));
-            }
-        });
-        return count.get() > 0;
-    }
-
     public List<SortedPlayer> getTopSortedPoints(Integer limit) {
-        List<SortedPlayer> players = new ArrayList<>();
-        this.databaseConnector.connect(connection -> {
-            String query = "SELECT t." + this.getUuidColumnName() + ", username, points FROM " + this.getPointsTableName() + " t " +
-                    "LEFT JOIN " + this.getTablePrefix() + "username_cache c ON t.uuid = c.uuid " +
-                    "ORDER BY points DESC" + (limit != null ? " LIMIT " + limit : "");
-            try (Statement statement = connection.createStatement()) {
-                ResultSet result = statement.executeQuery(query);
-                while (result.next()) {
-                    UUID uuid = UUID.fromString(result.getString(1));
-                    String username = result.getString(2);
-                    PointsValue pointsValue = this.pointsCache.get(uuid);
-                    if (pointsValue == null)
-                        pointsValue = new PointsValue(result.getInt(3));
-
-                    if (username != null) {
-                        players.add(new SortedPlayer(uuid, username, pointsValue));
-                    } else {
-                        players.add(new SortedPlayer(uuid, pointsValue));
-                    }
-                }
-            }
-        });
-        return players;
+        return plugin.getQueries().getTop(limit == null ? 10 : limit).join();
     }
 
     public Map<UUID, Long> getOnlineTopSortedPointPositions() {
@@ -321,20 +218,18 @@ public class DataManager extends AbstractDataManager implements Listener {
         if (Bukkit.getOnlinePlayers().isEmpty())
             return players;
 
-        String uuidList = Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).map(x -> "'" + x + "'").collect(Collectors.joining(", "));
-        this.databaseConnector.connect(connection -> {
-            String tableName = this.getPointsTableName();
-            String query = "SELECT t." + this.getUuidColumnName() + ", (SELECT COUNT(*) FROM " + tableName + " x WHERE x.points >= t.points) AS position " +
-                    "FROM " + tableName + " t " +
-                    "WHERE t.uuid IN (" + uuidList + ")";
-            try (Statement statement = connection.createStatement()) {
-                ResultSet result = statement.executeQuery(query);
-                while (result.next()) {
-                    UUID uuid = UUID.fromString(result.getString(1));
-                    players.put(uuid, result.getLong(2));
-                }
-            }
-        });
+        Map<UUID, Integer> points = new HashMap<>();
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            UserData data = this.getOnlineData(player);
+            if (data == null)
+                continue;
+
+            points.put(player.getUniqueId(), (int) data.getPoints());
+        }
+
+        points.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEachOrdered(entry -> players.put(entry.getKey(), points.size() - points.entrySet().stream().filter(e -> e.getValue() > entry.getValue()).count()));
+
         return players;
     }
 
@@ -485,4 +380,7 @@ public class DataManager extends AbstractDataManager implements Listener {
         );
     }
 
+    public boolean doesDataExist() {
+        return true;
+    }
 }

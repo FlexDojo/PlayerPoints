@@ -11,8 +11,11 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import lombok.Getter;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
@@ -29,6 +32,9 @@ public final class PointsUtils {
     private static NumberFormat formatter = NumberFormat.getInstance();
     private static String decimal;
     private static final NavigableMap<Long, String> suffixes = new TreeMap<>();
+
+    @Getter
+    private static final List<String> cachedNames = new CopyOnWriteArrayList<>();
 
     /**
      * Formats a number from 1100 to 1,100
@@ -136,13 +142,19 @@ public final class PointsUtils {
      * @return a list of online players excluding the
      */
     public static List<String> getPlayerTabComplete(String arg) {
-        List<String> players = Bukkit.getOnlinePlayers().stream()
-                .filter(x -> x.getMetadata("vanished").stream().noneMatch(MetadataValue::asBoolean))
-                .map(Player::getName)
-                .collect(Collectors.toList());
-        List<String> completions = new ArrayList<>();
-        StringUtil.copyPartialMatches(arg, players, completions);
-        return completions;
+
+        if(arg==null || arg.isEmpty()) {
+            if(cachedNames.size() < 1000) {
+                return cachedNames;
+            } else {
+                return cachedNames.subList(0, 1000);
+            }
+        } else {
+            List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(arg, cachedNames, completions);
+            return completions;
+        }
+
     }
 
 }

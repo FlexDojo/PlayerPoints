@@ -1,9 +1,11 @@
 package org.black_ixx.playerpoints.commands;
 
 import dev.rosewood.rosegarden.utils.StringPlaceholders;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.CommandManager;
 import org.black_ixx.playerpoints.manager.DataManager;
@@ -30,7 +32,7 @@ public class SetCommand extends PointsCommand {
             return;
         }
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(player -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(player -> {
             if (player == null) {
                 localeManager.sendMessage(sender, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
@@ -48,23 +50,14 @@ public class SetCommand extends PointsCommand {
                 return;
             }
 
-            if (plugin.getAPI().set(player.getFirst(), amount)) {
-                localeManager.sendMessage(sender, "command-set-success", StringPlaceholders.builder("player", player.getSecond())
+            if (plugin.getAPI().set(player.getUuid(), amount)) {
+                localeManager.sendMessage(sender, "command-set-success", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                         .build());
 
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
-                UserInfo info = new UserInfo(
-                        player.getFirst().toString(),
-                        offlinePlayer.getName(),
-                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
-                        amount,
-                        TransactionType.SET,
-                        null,
-                        "set by " + sender.getName()
-                );
-                plugin.getUserLogSQL().addLog(info);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.SET, "given by " + sender.getName(), amount);
+
             }
 
         });

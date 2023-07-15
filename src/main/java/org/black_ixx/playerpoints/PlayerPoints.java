@@ -2,19 +2,22 @@ package org.black_ixx.playerpoints;
 
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.manager.Manager;
+
 import java.util.Arrays;
 import java.util.List;
 
+import io.lettuce.core.RedisClient;
 import lombok.Getter;
 import me.lokka30.treasury.api.common.service.ServiceRegistry;
 import me.lokka30.treasury.api.economy.EconomyProvider;
 import net.milkbowl.vault.economy.Economy;
+import org.black_ixx.playerpoints.database.Queries;
 import org.black_ixx.playerpoints.database.UserLogSQL;
 import org.black_ixx.playerpoints.hook.PointsPlaceholderExpansion;
-import org.black_ixx.playerpoints.listeners.PointsMessageListener;
 import org.black_ixx.playerpoints.listeners.VotifierListener;
 import org.black_ixx.playerpoints.manager.*;
 import org.black_ixx.playerpoints.manager.ConfigurationManager.Setting;
+import org.black_ixx.playerpoints.redis.RedisImple;
 import org.black_ixx.playerpoints.treasury.PlayerPointsTreasuryLayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
@@ -31,6 +34,10 @@ public class PlayerPoints extends RosePlugin {
     private PlayerPointsVaultLayer vaultLayer;
     private PlayerPointsTreasuryLayer treasuryLayer;
     private UserLogSQL userLogSQL;
+    @Getter
+    private Queries queries;
+    @Getter
+    private RedisImple redis;
 
     public PlayerPoints() {
         super(80745, 10234, ConfigurationManager.class, DataManager.class, LocaleManager.class, null);
@@ -40,9 +47,13 @@ public class PlayerPoints extends RosePlugin {
     @Override
     public void enable() {
         this.api = new PlayerPointsAPI(this);
+        this.queries = new Queries(this);
 
         this.userLogSQL = new UserLogSQL();
         userLogSQL.createUserLogTable();
+
+        getManager(DataManager.class).loadOnlinePlayers();
+
         if (Setting.VAULT.getBoolean() && Bukkit.getPluginManager().isPluginEnabled("Vault")) {
             this.vaultLayer = new PlayerPointsVaultLayer(this);
 
@@ -63,6 +74,8 @@ public class PlayerPoints extends RosePlugin {
 
             Bukkit.getServicesManager().register(Economy.class, this.vaultLayer, this, priority);
         }
+
+        redis = new RedisImple(RedisClient.create(Setting.REDIS_URI.getString()), 15, this);
 
         if (Setting.TREASURY.getBoolean() && Bukkit.getPluginManager().isPluginEnabled("Treasury")) {
             this.treasuryLayer = new PlayerPointsTreasuryLayer(this);
@@ -85,10 +98,6 @@ public class PlayerPoints extends RosePlugin {
             ServiceRegistry.INSTANCE.registerService(EconomyProvider.class, new PlayerPointsTreasuryLayer(this), this.getName(), priority);
         }
 
-        if (Setting.BUNGEECORD_SEND_UPDATES.getBoolean()) {
-            Bukkit.getMessenger().registerOutgoingPluginChannel(this, PointsMessageListener.CHANNEL);
-            Bukkit.getMessenger().registerIncomingPluginChannel(this, PointsMessageListener.CHANNEL, new PointsMessageListener(this));
-        }
 
         Bukkit.getScheduler().runTask(this, () -> {
             // Register placeholders, if applicable
@@ -105,6 +114,13 @@ public class PlayerPoints extends RosePlugin {
                 }
             }
         });
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+            queries.getAllNames().thenAccept(names -> {
+                PointsUtils.getCachedNames().clear();
+                PointsUtils.getCachedNames().addAll(names);
+            });
+        }, 20, 20 * 60 * 5);
     }
 
     @Override

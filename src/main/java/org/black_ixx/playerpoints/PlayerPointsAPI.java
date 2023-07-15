@@ -27,6 +27,9 @@ public class PlayerPointsAPI {
         this.plugin = plugin;
     }
 
+
+
+
     /**
      * Gives a player a specified amount of points
      *
@@ -42,7 +45,8 @@ public class PlayerPointsAPI {
         if (event.isCancelled())
             return false;
 
-        return this.plugin.getManager(DataManager.class).offsetPoints(playerId, amount);
+
+        return this.plugin.getManager(DataManager.class).givePoints(playerId, amount).join();
     }
 
     /**
@@ -56,11 +60,10 @@ public class PlayerPointsAPI {
     public boolean giveAll(@NotNull Collection<UUID> playerIds, int amount) {
         Objects.requireNonNull(playerIds);
 
-        boolean success = false;
         for (UUID uuid : playerIds)
-            success |= this.give(uuid, amount);
+            this.give(uuid, amount);
 
-        return success;
+        return true;
     }
 
     /**
@@ -73,7 +76,13 @@ public class PlayerPointsAPI {
     public boolean take(@NotNull UUID playerId, int amount) {
         Objects.requireNonNull(playerId);
 
-        return this.give(playerId, -amount);
+        PlayerPointsChangeEvent event = new PlayerPointsChangeEvent(playerId, amount);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return false;
+
+
+        return this.plugin.getManager(DataManager.class).takePoints(playerId, amount).join();
     }
 
     /**
@@ -152,7 +161,7 @@ public class PlayerPointsAPI {
         if (event.isCancelled())
             return false;
 
-        return dataManager.setPoints(playerId, amount);
+        return dataManager.setPoints(playerId, amount).join();
     }
 
     /**
@@ -169,7 +178,7 @@ public class PlayerPointsAPI {
         if (event.isCancelled())
             return false;
 
-        return this.plugin.getManager(DataManager.class).setPoints(playerId, 0);
+        return this.plugin.getManager(DataManager.class).setPoints(playerId, 0).join();
     }
 
     /**

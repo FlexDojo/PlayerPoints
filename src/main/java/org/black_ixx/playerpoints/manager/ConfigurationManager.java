@@ -26,7 +26,8 @@ public class ConfigurationManager extends AbstractConfigurationManager {
         BASE_COMMAND_REDIRECT("base-command-redirect", "", "Which command should we redirect to when using '/points' with no subcommand specified?", "You can use a value here such as 'me' to show the output of '/points me'", "If you have any aliases defined, do not use them here", "If left as blank, the default behavior of showing '/points version' with bypassed permissions will be used"),
         LEGACY_DATABASE("legacy-database-mode", null, "Are you upgrading from a much older version of PlayerPoints?", "If you have done anything special with the database settings previously, you may need this", "WARNING: This setting may be removed in the future. Try to get your database updated to use the new format!"),
         LEGACY_DATABASE_MODE("legacy-database-mode.enabled", false, "Should we use legacy database mode?"),
-        LEGACY_DATABASE_NAME("legacy-database-mode.table-name", "playerpoints", "The name of the legacy database table");
+        LEGACY_DATABASE_NAME("legacy-database-mode.table-name", "playerpoints", "The name of the legacy database table"),
+        REDIS_URI("redis.uri", "redis://localhost:6379", "The URI of the Redis server to connect to", "If this is set, PlayerPoints will use Redis for caching instead of the local cache", "The URI should be in the format of 'redis://[password@]host:port'");
 
         private final String key;
         private final Object defaultValue;

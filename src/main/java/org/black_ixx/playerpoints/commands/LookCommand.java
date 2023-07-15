@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.CommandManager;
+import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
 import org.black_ixx.playerpoints.models.Tuple;
 import org.black_ixx.playerpoints.util.PointsUtils;
@@ -26,14 +27,14 @@ public class LookCommand extends PointsCommand {
             return;
         }
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(player -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(player -> {
             if (player == null) {
                 localeManager.sendMessage(sender, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
             }
 
-            int amount = plugin.getAPI().look(player.getFirst());
-            localeManager.sendMessage(sender, "command-look-success", StringPlaceholders.builder("player", player.getSecond())
+            int amount = plugin.getAPI().look(player.getUuid());
+            localeManager.sendMessage(sender, "command-look-success", StringPlaceholders.builder("player", player.getName())
                     .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                     .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                     .build());

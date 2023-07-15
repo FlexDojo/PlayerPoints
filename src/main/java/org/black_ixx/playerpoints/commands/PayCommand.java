@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.CommandManager;
+import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
@@ -46,13 +47,13 @@ public class PayCommand extends PointsCommand {
 
         PAY_COOLDOWN.put(player.getUniqueId(), System.currentTimeMillis());
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(target -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(target -> {
             if (target == null) {
                 localeManager.sendMessage(player, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
             }
 
-            if (player.getUniqueId().equals(target.getFirst())) {
+            if (player.getUniqueId().equals(target.getUuid())) {
                 localeManager.sendMessage(player, "command-pay-self");
                 return;
             }
@@ -70,15 +71,15 @@ public class PayCommand extends PointsCommand {
                 return;
             }
 
-            if (plugin.getAPI().pay(player.getUniqueId(), target.getFirst(), amount)) {
+            if (plugin.getAPI().pay(player.getUniqueId(), target.getUuid(), amount)) {
                 // Send success message to sender
                 localeManager.sendMessage(player, "command-pay-sent", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
-                        .addPlaceholder("player", target.getSecond())
+                        .addPlaceholder("player", target.getName())
                         .build());
 
                 // Send success message to target
-                Player onlinePlayer = Bukkit.getPlayer(target.getFirst());
+                Player onlinePlayer = Bukkit.getPlayer(target.getUuid());
                 if (onlinePlayer != null) {
                     localeManager.sendMessage(onlinePlayer, "command-pay-received", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
                             .addPlaceholder("currency", localeManager.getCurrencyName(amount))

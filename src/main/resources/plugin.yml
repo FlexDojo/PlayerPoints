@@ -6,6 +6,8 @@ description: A point based currency system
 main: org.black_ixx.playerpoints.PlayerPoints
 api-version: '1.13'
 load: STARTUP
+libraries:
+  - io.lettuce:lettuce-core:6.2.4.RELEASE
 softdepend: [Vault, Treasury, Votifier, PlaceholderAPI, TokenManager, GamePoints, NexEngine]
 loadbefore: [mcMMO]
 commands:

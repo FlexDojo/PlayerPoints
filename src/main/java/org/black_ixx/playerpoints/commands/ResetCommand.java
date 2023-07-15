@@ -30,28 +30,19 @@ public class ResetCommand extends PointsCommand {
             return;
         }
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(player -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(player -> {
             if (player == null) {
                 localeManager.sendMessage(sender, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
             }
 
-            if (plugin.getAPI().reset(player.getFirst())) {
-                localeManager.sendMessage(sender, "command-reset-success", StringPlaceholders.builder("player", player.getSecond())
+            if (plugin.getAPI().reset(player.getUuid())) {
+                localeManager.sendMessage(sender, "command-reset-success", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(0))
                         .build());
 
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
-                UserInfo info = new UserInfo(
-                        player.getFirst().toString(),
-                        offlinePlayer.getName(),
-                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
-                        0,
-                        TransactionType.RESET,
-                        null,
-                        "reset by " + sender.getName()
-                );
-                plugin.getUserLogSQL().addLog(info);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.RESET, "given by " + sender.getName(), 0);
+
             }
 
         });

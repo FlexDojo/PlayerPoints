@@ -6,8 +6,8 @@ plugins {
     id 'maven-publish'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 14
+targetCompatibility = 14
 group = 'org.black_ixx'
 version = '3.2.5'
 
@@ -27,7 +27,15 @@ repositories {
 
 dependencies {
     api 'dev.rosewood:rosegarden:1.2.1'
-    implementation 'org.projectlombok:lombok:1.18.22'
+
+    compileOnly 'io.lettuce:lettuce-core:6.2.4.RELEASE'
+
+
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.28'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
 
     compileOnly 'org.spigotmc:spigot:1.17.1'
     compileOnly 'com.github.milkbowl:vault:1.7.3'

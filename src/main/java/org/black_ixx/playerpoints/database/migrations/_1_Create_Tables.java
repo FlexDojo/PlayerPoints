@@ -61,6 +61,7 @@ public class _1_Create_Tables extends DataMigration {
                 statement.executeUpdate("CREATE TABLE " + tablePrefix + "points (" +
                         "id INTEGER PRIMARY KEY" + autoIncrement + ", " +
                         "uuid VARCHAR(36) NOT NULL, " +
+                        "name VARCHAR(16) NOT NULL, " +
                         "points INTEGER NOT NULL, " +
                         "UNIQUE (uuid)" +
                         ")");

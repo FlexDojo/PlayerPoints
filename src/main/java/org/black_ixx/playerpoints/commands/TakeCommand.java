@@ -30,7 +30,7 @@ public class TakeCommand extends PointsCommand {
             return;
         }
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(player -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(player -> {
             if (player == null) {
                 localeManager.sendMessage(sender, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
@@ -48,29 +48,20 @@ public class TakeCommand extends PointsCommand {
                 return;
             }
 
-            if (plugin.getAPI().take(player.getFirst(), amount)) {
-                localeManager.sendMessage(sender, "command-take-success", StringPlaceholders.builder("player", player.getSecond())
+            if (plugin.getAPI().take(player.getUuid(), amount)) {
+                localeManager.sendMessage(sender, "command-take-success", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                         .build());
 
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
-                UserInfo info = new UserInfo(
-                        player.getFirst().toString(),
-                        offlinePlayer.getName(),
-                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
-                        amount,
-                        TransactionType.TAKE,
-                        null,
-                        "taken by " + sender.getName()
-                );
-                plugin.getUserLogSQL().addLog(info);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.TAKE, "given by " + sender.getName(), amount);
+
 
             } else {
-                localeManager.sendMessage(sender, "command-take-lacking-funds", StringPlaceholders.builder("player", player.getSecond())
+                localeManager.sendMessage(sender, "command-take-lacking-funds", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .build());
-                plugin.getAPI().reset(player.getFirst());
+                plugin.getAPI().reset(player.getUuid());
             }
         });
     }

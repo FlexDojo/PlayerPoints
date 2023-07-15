@@ -31,7 +31,7 @@ public class GiveCommand extends PointsCommand {
             return;
         }
 
-        PointsUtils.getPlayerByName(args[0]).thenAccept(player -> {
+        plugin.getManager(DataManager.class).getUserData(args[0]).thenAccept(player -> {
             if (player == null) {
                 localeManager.sendMessage(sender, "unknown-player", StringPlaceholders.single("player", args[0]));
                 return;
@@ -51,10 +51,10 @@ public class GiveCommand extends PointsCommand {
             }
 
 
-            if (plugin.getAPI().give(player.getFirst(), amount)) {
+            if (plugin.getAPI().give(player.getUuid(), amount)) {
 
                 // Send message to receiver
-                Player onlinePlayer = Bukkit.getPlayer(player.getFirst());
+                Player onlinePlayer = Bukkit.getPlayer(player.getUuid());
 
                 if (onlinePlayer != null) {
                     localeManager.sendMessage(onlinePlayer, "command-give-received", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
@@ -65,21 +65,11 @@ public class GiveCommand extends PointsCommand {
                 // Send message to sender
                 localeManager.sendMessage(sender, "command-give-success", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
-                        .addPlaceholder("player", player.getSecond())
+                        .addPlaceholder("player", player.getName())
                         .build());
 
                 // Log transaction
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
-                UserInfo info = new UserInfo(
-                        player.getFirst().toString(),
-                        offlinePlayer.getName(),
-                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
-                        amount,
-                        TransactionType.GIVE,
-                        null,
-                        "given by " + sender.getName()
-                );
-                plugin.getUserLogSQL().addLog(info);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.GIVE, "given by " + sender.getName(), amount);
 
             } else {
                 localeManager.sendMessage(sender, "command-give-failed");
