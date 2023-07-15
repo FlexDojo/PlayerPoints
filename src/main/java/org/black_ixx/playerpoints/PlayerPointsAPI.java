@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.black_ixx.playerpoints.event.PlayerPointsChangeEvent;
 import org.black_ixx.playerpoints.event.PlayerPointsResetEvent;
 import org.black_ixx.playerpoints.manager.DataManager;
-import org.black_ixx.playerpoints.manager.UserInfo;
 import org.black_ixx.playerpoints.models.SortedPlayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
@@ -52,6 +51,25 @@ public class PlayerPointsAPI {
     /**
      * Gives a collection of players a specified amount of points
      *
+     * @param playerId The players to give points to
+     * @param amount The amount of points to give
+     * @return true if any transaction was successful, false otherwise
+     */
+    public boolean giveCommand(@NotNull UUID playerId, int amount) {
+        Objects.requireNonNull(playerId);
+
+        PlayerPointsChangeEvent event = new PlayerPointsChangeEvent(playerId, amount);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return false;
+
+
+        return this.plugin.getManager(DataManager.class).givePointsCommand(playerId, amount).join();
+    }
+
+    /**
+     * Gives a collection of players a specified amount of points
+     *
      * @param playerIds The players to give points to
      * @param amount The amount of points to give
      * @return true if any transaction was successful, false otherwise
@@ -81,8 +99,25 @@ public class PlayerPointsAPI {
         if (event.isCancelled())
             return false;
 
-
         return this.plugin.getManager(DataManager.class).takePoints(playerId, amount).join();
+    }
+
+    /**
+     * Takes a specified amount of points from a player
+     *
+     * @param playerId The player to take points from
+     * @param amount The amount of points to take
+     * @return true if the transaction was successful, false otherwise
+     */
+    public boolean takeCommand(@NotNull UUID playerId, int amount) {
+        Objects.requireNonNull(playerId);
+
+        PlayerPointsChangeEvent event = new PlayerPointsChangeEvent(playerId, amount);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return false;
+
+        return this.plugin.getManager(DataManager.class).takePointsCommand(playerId, amount).join();
     }
 
     /**

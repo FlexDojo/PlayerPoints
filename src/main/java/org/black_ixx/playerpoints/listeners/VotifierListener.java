@@ -2,13 +2,10 @@ package org.black_ixx.playerpoints.listeners;
 
 import com.vexsoftware.votifier.model.VotifierEvent;
 import dev.rosewood.rosegarden.utils.StringPlaceholders;
-import java.util.UUID;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.ConfigurationManager.Setting;
 import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
-import org.black_ixx.playerpoints.models.Tuple;
-import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

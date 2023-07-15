@@ -41,7 +41,7 @@ public class ResetCommand extends PointsCommand {
                         .addPlaceholder("currency", localeManager.getCurrencyName(0))
                         .build());
 
-                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.RESET, "given by " + sender.getName(), 0);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.RESET, "reset by " + sender.getName(), 0);
 
             }
 

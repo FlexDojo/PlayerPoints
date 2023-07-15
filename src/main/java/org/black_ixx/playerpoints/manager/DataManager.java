@@ -26,12 +26,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class DataManager extends AbstractDataManager implements Listener {
 
     private final PlayerPoints plugin;
     private final Map<UUID, UserData> userDataCache;
+
+
 
     public DataManager(RosePlugin plugin) {
         super(plugin);
@@ -95,6 +96,7 @@ public class DataManager extends AbstractDataManager implements Listener {
     }
 
     public CompletableFuture<Boolean> setPoints(UUID uuid, double points) {
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.SET, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
         return updatePoints(getUserData(uuid), points, 2);
     }
 
@@ -103,14 +105,25 @@ public class DataManager extends AbstractDataManager implements Listener {
     }
 
     public CompletableFuture<Boolean> givePoints(UUID uuid, double points) {
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.GIVE, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
         return updatePoints(getUserData(uuid), points, 0);
     }
+
+    public CompletableFuture<Boolean> givePointsCommand(UUID uuid, double points) {
+        return updatePoints(getUserData(uuid), points, 0);
+    }
+
 
     public CompletableFuture<Boolean> givePoints(String name, double points) {
         return updatePoints(getUserData(name), points, 0);
     }
 
     public CompletableFuture<Boolean> takePoints(UUID uuid, double points) {
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.TAKE, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
+        return updatePoints(getUserData(uuid), points, 1);
+    }
+
+    public CompletableFuture<Boolean> takePointsCommand(UUID uuid, double points) {
         return updatePoints(getUserData(uuid), points, 1);
     }
 

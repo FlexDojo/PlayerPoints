@@ -56,7 +56,7 @@ public class SetCommand extends PointsCommand {
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                         .build());
 
-                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.SET, "given by " + sender.getName(), amount);
+                plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(player.getUuid()), TransactionType.SET, "set by " + sender.getName(), amount);
 
             }
 

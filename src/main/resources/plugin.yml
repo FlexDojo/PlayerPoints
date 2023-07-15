@@ -12,7 +12,7 @@ softdepend: [Vault, Treasury, Votifier, PlaceholderAPI, TokenManager, GamePoints
 loadbefore: [mcMMO]
 commands:
   points:
-    aliases: [p]
+    aliases: [flux, p]
     description: Root command for PlayerPoints
 permissions:
   playerpoints.*:
