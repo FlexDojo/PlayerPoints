@@ -62,7 +62,7 @@ public class UserLogSQL {
                         "amount DOUBLE, " +
                         "operation VARCHAR(50), " +
                         "`date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " + // Modified syntax for the `date` column
-                        "comment VARCHAR(50))"
+                        "comment TEXT)"
                 )){
                     statement.executeUpdate();
                 } catch (SQLException e) {
