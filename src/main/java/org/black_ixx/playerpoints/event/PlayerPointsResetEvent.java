@@ -1,6 +1,7 @@
 package org.black_ixx.playerpoints.event;
 
 import java.util.UUID;
+
 import org.bukkit.event.HandlerList;
 
 /**

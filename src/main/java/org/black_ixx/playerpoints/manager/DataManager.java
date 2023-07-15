@@ -7,24 +7,6 @@ import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.database.DataMigration;
 import dev.rosewood.rosegarden.database.SQLiteConnector;
 import dev.rosewood.rosegarden.manager.AbstractDataManager;
-import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import org.black_ixx.playerpoints.database.migrations._1_Create_Tables;
 import org.black_ixx.playerpoints.database.migrations._2_Add_Table_Username_Cache;
 import org.black_ixx.playerpoints.listeners.PointsMessageListener;
@@ -39,6 +21,18 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+
+import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class DataManager extends AbstractDataManager implements Listener {
 
@@ -105,14 +99,16 @@ public class DataManager extends AbstractDataManager implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED)
+        if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             this.pointsCache.put(event.getUniqueId(), new PointsValue(this.getPoints(event.getUniqueId())));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         this.pendingUsernameUpdates.put(player.getUniqueId(), player.getName());
+        this.update();
     }
 
     /**
@@ -169,7 +165,7 @@ public class DataManager extends AbstractDataManager implements Listener {
      * @param playerId The UUID of the Player
      * @return the amount of points the Player has
      */
-    private int getPoints(UUID playerId) {
+    public int getPoints(UUID playerId) {
         AtomicInteger value = new AtomicInteger();
         AtomicBoolean generate = new AtomicBoolean(false);
         this.databaseConnector.connect(connection -> {
@@ -202,7 +198,7 @@ public class DataManager extends AbstractDataManager implements Listener {
      * Adds a pending transaction to set the player's points to a specified amount
      *
      * @param playerId The Player to set the points of
-     * @param amount The amount to set to
+     * @param amount   The amount to set to
      * @return true if the transaction was successful, false otherwise
      */
     public boolean setPoints(UUID playerId, int amount) {
@@ -217,7 +213,7 @@ public class DataManager extends AbstractDataManager implements Listener {
      * Adds a pending transaction to offset the player's points by a specified amount
      *
      * @param playerId The Player to offset the points of
-     * @param amount The amount to offset by
+     * @param amount   The amount to offset by
      * @return true if the transaction was successful, false otherwise
      */
     public boolean offsetPoints(UUID playerId, int amount) {
@@ -298,8 +294,8 @@ public class DataManager extends AbstractDataManager implements Listener {
         List<SortedPlayer> players = new ArrayList<>();
         this.databaseConnector.connect(connection -> {
             String query = "SELECT t." + this.getUuidColumnName() + ", username, points FROM " + this.getPointsTableName() + " t " +
-                           "LEFT JOIN " + this.getTablePrefix() + "username_cache c ON t.uuid = c.uuid " +
-                           "ORDER BY points DESC" + (limit != null ? " LIMIT " + limit : "");
+                    "LEFT JOIN " + this.getTablePrefix() + "username_cache c ON t.uuid = c.uuid " +
+                    "ORDER BY points DESC" + (limit != null ? " LIMIT " + limit : "");
             try (Statement statement = connection.createStatement()) {
                 ResultSet result = statement.executeQuery(query);
                 while (result.next()) {
@@ -329,8 +325,8 @@ public class DataManager extends AbstractDataManager implements Listener {
         this.databaseConnector.connect(connection -> {
             String tableName = this.getPointsTableName();
             String query = "SELECT t." + this.getUuidColumnName() + ", (SELECT COUNT(*) FROM " + tableName + " x WHERE x.points >= t.points) AS position " +
-                           "FROM " + tableName + " t " +
-                           "WHERE t.uuid IN (" + uuidList + ")";
+                    "FROM " + tableName + " t " +
+                    "WHERE t.uuid IN (" + uuidList + ")";
             try (Statement statement = connection.createStatement()) {
                 ResultSet result = statement.executeQuery(query);
                 while (result.next()) {

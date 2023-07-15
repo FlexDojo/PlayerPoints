@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.UUID;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.CommandManager;
+import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
+import org.black_ixx.playerpoints.manager.UserInfo;
 import org.black_ixx.playerpoints.models.Tuple;
 import org.black_ixx.playerpoints.util.PointsUtils;
+import org.black_ixx.playerpoints.util.TransactionType;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
 public class SetCommand extends PointsCommand {
@@ -49,7 +53,20 @@ public class SetCommand extends PointsCommand {
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                         .build());
+
+                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
+                UserInfo info = new UserInfo(
+                        player.getFirst().toString(),
+                        offlinePlayer.getName(),
+                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
+                        amount,
+                        TransactionType.SET,
+                        null,
+                        "set by " + sender.getName()
+                );
+                plugin.getUserLogSQL().addLog(info);
             }
+
         });
     }
 

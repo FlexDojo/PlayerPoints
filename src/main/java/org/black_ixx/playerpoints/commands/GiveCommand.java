@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.UUID;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.manager.CommandManager;
+import org.black_ixx.playerpoints.manager.DataManager;
 import org.black_ixx.playerpoints.manager.LocaleManager;
+import org.black_ixx.playerpoints.manager.UserInfo;
 import org.black_ixx.playerpoints.models.Tuple;
 import org.black_ixx.playerpoints.util.PointsUtils;
+import org.black_ixx.playerpoints.util.TransactionType;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -46,9 +50,12 @@ public class GiveCommand extends PointsCommand {
                 return;
             }
 
+
             if (plugin.getAPI().give(player.getFirst(), amount)) {
+
                 // Send message to receiver
                 Player onlinePlayer = Bukkit.getPlayer(player.getFirst());
+
                 if (onlinePlayer != null) {
                     localeManager.sendMessage(onlinePlayer, "command-give-received", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
                             .addPlaceholder("currency", localeManager.getCurrencyName(amount))
@@ -60,6 +67,22 @@ public class GiveCommand extends PointsCommand {
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("player", player.getSecond())
                         .build());
+
+                // Log transaction
+                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getFirst());
+                UserInfo info = new UserInfo(
+                        player.getFirst().toString(),
+                        offlinePlayer.getName(),
+                        plugin.getManager(DataManager.class).getPoints(player.getFirst()),
+                        amount,
+                        TransactionType.GIVE,
+                        null,
+                        "given by " + sender.getName()
+                );
+                plugin.getUserLogSQL().addLog(info);
+
+            } else {
+                localeManager.sendMessage(sender, "command-give-failed");
             }
         });
     }

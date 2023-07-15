@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.black_ixx.playerpoints.event.PlayerPointsChangeEvent;
 import org.black_ixx.playerpoints.event.PlayerPointsResetEvent;
 import org.black_ixx.playerpoints.manager.DataManager;
+import org.black_ixx.playerpoints.manager.UserInfo;
 import org.black_ixx.playerpoints.models.SortedPlayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
