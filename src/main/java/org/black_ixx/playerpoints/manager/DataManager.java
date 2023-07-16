@@ -100,7 +100,7 @@ public class DataManager extends AbstractDataManager implements Listener {
         return updatePoints(getUserData(uuid), points, 2);
     }
 
-    public CompletableFuture<Boolean> setPoints(String name, double points) {
+    public CompletableFuture<Boolean> setPointsCommand(UUID name, double points) {
         return updatePoints(getUserData(name), points, 2);
     }
 

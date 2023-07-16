@@ -199,6 +199,20 @@ public class PlayerPointsAPI {
         return dataManager.setPoints(playerId, amount).join();
     }
 
+
+    public boolean setCommand(@NotNull UUID playerId, int amount) {
+        Objects.requireNonNull(playerId);
+
+        DataManager dataManager = this.plugin.getManager(DataManager.class);
+        int points = dataManager.getEffectivePoints(playerId);
+        PlayerPointsChangeEvent event = new PlayerPointsChangeEvent(playerId, amount - points);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return false;
+
+        return dataManager.setPointsCommand(playerId, amount).join();
+    }
+
     /**
      * Sets a player's points to zero
      *

@@ -50,7 +50,7 @@ public class SetCommand extends PointsCommand {
                 return;
             }
 
-            if (plugin.getAPI().set(player.getUuid(), amount)) {
+            if (plugin.getAPI().setCommand(player.getUuid(), amount)) {
                 localeManager.sendMessage(sender, "command-set-success", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
