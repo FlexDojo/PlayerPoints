@@ -38,6 +38,7 @@ public class PlayerPoints extends RosePlugin {
     private Queries queries;
     @Getter
     private RedisImple redis;
+    private PointsPlaceholderExpansion placeholderExpansion;
 
     public PlayerPoints() {
         super(80745, 10234, ConfigurationManager.class, DataManager.class, LocaleManager.class, null);
@@ -101,8 +102,10 @@ public class PlayerPoints extends RosePlugin {
 
         Bukkit.getScheduler().runTask(this, () -> {
             // Register placeholders, if applicable
-            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
-                new PointsPlaceholderExpansion(this).register();
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                placeholderExpansion = new PointsPlaceholderExpansion(this);
+                placeholderExpansion.register();
+            }
 
             // Register votifier listener, if applicable
             if (Setting.VOTE_ENABLED.getBoolean()) {
@@ -134,6 +137,10 @@ public class PlayerPoints extends RosePlugin {
         if (Setting.BUNGEECORD_SEND_UPDATES.getBoolean()) {
             Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
             Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
+        }
+
+        if(placeholderExpansion!=null) {
+            placeholderExpansion.unregister();
         }
     }
 

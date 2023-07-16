@@ -9,6 +9,7 @@ import org.black_ixx.playerpoints.manager.LocaleManager;
 import org.black_ixx.playerpoints.models.SortedPlayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
 
 public class PointsPlaceholderExpansion extends PlaceholderExpansion {
 
@@ -25,25 +26,30 @@ public class PointsPlaceholderExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public String onRequest(OfflinePlayer player, String placeholder) {
+    public String onRequest(OfflinePlayer player, @NotNull String placeholder) {
         if (player != null) {
             switch (placeholder.toLowerCase()) {
-                case "points":
+                case "points" -> {
                     return String.valueOf(this.dataManager.getEffectivePoints(player.getUniqueId()));
-                case "points_formatted":
+                }
+                case "points_formatted" -> {
                     return PointsUtils.formatPoints(this.dataManager.getEffectivePoints(player.getUniqueId()));
-                case "points_shorthand":
+                }
+                case "points_shorthand" -> {
                     return PointsUtils.formatPointsShorthand(this.dataManager.getEffectivePoints(player.getUniqueId()));
-                case "leaderboard_position":
+                }
+                case "leaderboard_position" -> {
                     Long position = this.leaderboardManager.getPlayerLeaderboardPosition(player.getUniqueId());
                     return String.valueOf(position != null ? position : -1);
-                case "leaderboard_position_formatted":
+                }
+                case "leaderboard_position_formatted" -> {
                     try {
                         Long position1 = this.leaderboardManager.getPlayerLeaderboardPosition(player.getUniqueId());
                         return PointsUtils.formatPoints(position1 != null ? position1 : -1);
                     } catch (Exception e) {
                         return null;
                     }
+                }
             }
         }
 
