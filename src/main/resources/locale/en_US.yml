@@ -4,6 +4,8 @@ prefix: '&7[<g:#E8A230:#ECD32D>{{PLUGIN_NAME}}&7] '
 # Currency
 currency-singular: 'Point'
 currency-plural: 'Points'
+exchange-currency-singular: 'Corona'
+exchange-currency-plural: 'Corone'
 currency-separator: ','
 currency-decimal: '.'
 number-abbreviation-thousands: 'k'
@@ -44,6 +46,14 @@ command-take-description: '&8 - &d/points take &7- Take points from a player'
 command-take-usage: '&cUsage: &e/points take <player> <amount>'
 command-take-success: '&aTook &b%amount% &a%currency% from &b%player%&a.'
 command-take-lacking-funds: '&b%player% &cdoes not have enough %currency% for that, so their balance was set to 0.'
+
+# Exchange Command
+command-exchange-description: '&8 - &d/points exchange &7- Take points from a player'
+command-exchange-usage: '&cUsage: &e/points exchange <player> <amount>'
+command-exchange-success: '&aTook %amount-vault% from &b%player%&a. &e(Exchanged %amount-vault% -> %amount-flux%)'
+command-exchange-received: '&eYou were taken &b%amount-vault% by &b%player%&e. &e(Exchanged %amount-vault% -> %amount-flux%)'
+command-exchange-lacking-funds: '&b%player% &cdoes not have enough %vault% for that, so their balance was set to 0.'
+command-exchange-not-enough: '&cYou do not have enough %vault% for that.'
 
 # Look Command
 command-look-description: '&8 - &d/points look &7- View a player''s points'

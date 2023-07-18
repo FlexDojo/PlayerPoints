@@ -21,6 +21,14 @@ public class LocaleManager extends AbstractLocaleManager {
         }
     }
 
+    public String getExchangeCurrencyName(int value) {
+        if (value == 1 || value == -1) {
+            return this.getLocaleMessage("exchange-currency-singular");
+        } else {
+            return this.getLocaleMessage("exchange-currency-plural");
+        }
+    }
+
     @Override
     protected void handleMessage(CommandSender sender, String message) {
         if (!Bukkit.isPrimaryThread() && (sender instanceof BlockCommandSender || sender instanceof CommandMinecart)) {

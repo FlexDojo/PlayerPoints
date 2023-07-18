@@ -120,6 +120,21 @@ public class PlayerPointsAPI {
         return this.plugin.getManager(DataManager.class).takePointsCommand(playerId, amount).join();
     }
 
+    /*
+
+     */
+    public boolean exchangeCommand(@NotNull UUID playerId, int newBalance) {
+        Objects.requireNonNull(playerId);
+
+        PlayerPointsChangeEvent event = new PlayerPointsChangeEvent(playerId, newBalance);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled())
+            return false;
+
+        return this.plugin.getManager(DataManager.class).exchangePointsCommand(playerId, newBalance).join();
+
+    }
+
     /**
      * Looks at the number of points a player has
      *

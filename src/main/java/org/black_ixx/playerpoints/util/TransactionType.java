@@ -7,7 +7,7 @@ public enum TransactionType {
     RANDOM_GIVE,
     TAKE,
     NOT_ENOUGH_MONEY,
-    UNKNOWN;
+    UNKNOWN, EXCHANGE;
 
     public static TransactionType fromString(String str) {
         switch (str.toUpperCase()) {

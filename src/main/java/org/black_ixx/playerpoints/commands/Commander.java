@@ -22,6 +22,7 @@ public class Commander extends CommandHandler {
         this.registerCommand(new GiveCommand());
         this.registerCommand(new GiveAllCommand());
         this.registerCommand(new TakeCommand());
+        this.registerCommand(new ExchangeCommand());
         this.registerCommand(new LookCommand());
         this.registerCommand(new PayCommand());
         this.registerCommand(new SetCommand());

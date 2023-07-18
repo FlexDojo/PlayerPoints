@@ -37,7 +37,8 @@ public class CommandManager extends Manager {
         RESET,
         SET,
         TAKE,
-        VERSION;
+        VERSION,
+        EXCHANGE;
 
         private List<String> aliases;
 

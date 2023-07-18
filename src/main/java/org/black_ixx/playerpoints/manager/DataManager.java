@@ -396,4 +396,9 @@ public class DataManager extends AbstractDataManager implements Listener {
     public boolean doesDataExist() {
         return true;
     }
+
+    public CompletableFuture<Boolean> exchangePointsCommand(UUID playerId, int newBalance) {
+        return updatePoints(getUserData(playerId), newBalance, 0);
+
+    }
 }
