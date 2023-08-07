@@ -4,12 +4,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import dev.rosewood.rosegarden.utils.StringPlaceholders;
 import org.black_ixx.playerpoints.event.PlayerPointsChangeEvent;
 import org.black_ixx.playerpoints.event.PlayerPointsResetEvent;
 import org.black_ixx.playerpoints.manager.DataManager;
+import org.black_ixx.playerpoints.manager.LocaleManager;
 import org.black_ixx.playerpoints.models.SortedPlayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -22,8 +26,11 @@ public class PlayerPointsAPI {
 
     private final PlayerPoints plugin;
 
+    LocaleManager localeManager;
+
     public PlayerPointsAPI(PlayerPoints plugin) {
         this.plugin = plugin;
+        this.localeManager = plugin.getManager(LocaleManager.class);
     }
 
 
@@ -43,6 +50,15 @@ public class PlayerPointsAPI {
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())
             return false;
+
+        // Send message to receiver
+        Player onlinePlayer = Bukkit.getPlayer(playerId);
+
+        if (onlinePlayer != null) {
+            localeManager.sendMessage(onlinePlayer, "command-give-received", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
+                    .addPlaceholder("currency", localeManager.getCurrencyName(amount))
+                    .build());
+        }
 
 
         return this.plugin.getManager(DataManager.class).givePoints(playerId, amount).join();
@@ -98,6 +114,14 @@ public class PlayerPointsAPI {
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())
             return false;
+
+        Player onlinePlayer = Bukkit.getPlayer(playerId);
+
+        if (onlinePlayer != null) {
+            localeManager.sendMessage(onlinePlayer, "command-take-player", StringPlaceholders.builder("currency", localeManager.getCurrencyName(amount))
+                    .addPlaceholder("amount", PointsUtils.formatPoints(amount))
+                    .build());
+        }
 
         return this.plugin.getManager(DataManager.class).takePoints(playerId, amount).join();
     }

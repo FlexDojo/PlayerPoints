@@ -11,6 +11,7 @@ import org.black_ixx.playerpoints.manager.LocaleManager;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.black_ixx.playerpoints.util.TransactionType;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class TakeCommand extends PointsCommand {
 
@@ -45,8 +46,21 @@ public class TakeCommand extends PointsCommand {
             }
 
             if (plugin.getAPI().takeCommand(player.getUuid(), amount)) {
+
+                Player onlinePlayer = plugin.getServer().getPlayer(player.getUuid());
+
+                if (onlinePlayer != null) {
+                    localeManager.sendMessage(onlinePlayer, "command-give-received", StringPlaceholders.builder("amount", PointsUtils.formatPoints(amount))
+                            .addPlaceholder("currency", localeManager.getCurrencyName(amount))
+                            .build());
+                }
+
                 localeManager.sendMessage(sender, "command-take-success", StringPlaceholders.builder("player", player.getName())
                         .addPlaceholder("currency", localeManager.getCurrencyName(amount))
+                        .addPlaceholder("amount", PointsUtils.formatPoints(amount))
+                        .build());
+
+                localeManager.sendMessage(onlinePlayer, "command-take-player", StringPlaceholders.builder("currency", localeManager.getCurrencyName(amount))
                         .addPlaceholder("amount", PointsUtils.formatPoints(amount))
                         .build());
 

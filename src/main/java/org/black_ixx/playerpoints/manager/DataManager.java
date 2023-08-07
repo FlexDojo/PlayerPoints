@@ -91,12 +91,16 @@ public class DataManager extends AbstractDataManager implements Listener {
         return plugin.getQueries().loadUser(uuid);
     }
 
+    public CompletableFuture<Void> updateUserName(UUID uuid, String name) {
+        return plugin.getQueries().updateUserData(uuid, name);
+    }
+
     public CompletableFuture<UserData> loadUser(String name) {
         return plugin.getQueries().loadUser(name);
     }
 
     public CompletableFuture<Boolean> setPoints(UUID uuid, double points) {
-        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.SET, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.SET, "API: " + (Thread.currentThread().getStackTrace()[5].getClassName()), points);
         return updatePoints(getUserData(uuid), points, 2);
     }
 
@@ -105,7 +109,7 @@ public class DataManager extends AbstractDataManager implements Listener {
     }
 
     public CompletableFuture<Boolean> givePoints(UUID uuid, double points) {
-        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.GIVE, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.GIVE, "API: " + (Thread.currentThread().getStackTrace()[5].getClassName()), points);
         return updatePoints(getUserData(uuid), points, 0);
     }
 
@@ -119,7 +123,7 @@ public class DataManager extends AbstractDataManager implements Listener {
     }
 
     public CompletableFuture<Boolean> takePoints(UUID uuid, double points) {
-        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.TAKE, (Thread.currentThread().getStackTrace()[5].getClassName()), points);
+        plugin.getUserLogSQL().addLog(plugin.getManager(DataManager.class).getOnlineData(uuid), TransactionType.TAKE, "API: " + (Thread.currentThread().getStackTrace()[5].getClassName()), points);
         return updatePoints(getUserData(uuid), points, 1);
     }
 
@@ -175,8 +179,16 @@ public class DataManager extends AbstractDataManager implements Listener {
                 data = new UserData(event.getUniqueId(), event.getName(), 0);
                 plugin.getQueries().createData(data);
             }
+            if (!data.getName().equalsIgnoreCase(event.getName())) {
+                plugin.getLogger().info("Updating " + data.getName() + " (" + data.getUuid() + ") to " + event.getName());
+                updateUserName(event.getUniqueId(), event.getName());
+            } else {
+                plugin.getLogger().info("Loaded " + data.getName() + " (" + data.getUuid() + ") with " + data.getPoints() + " points.");
+            }
             userDataCache.put(event.getUniqueId(), data);
         });
+
+
     }
 
     @EventHandler

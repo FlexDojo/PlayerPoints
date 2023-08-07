@@ -109,6 +109,20 @@ public class Queries {
         return future;
     }
 
+    public CompletableFuture<Void> updateUserData(UUID uuid, String newName) {
+        return CompletableFuture.runAsync(() -> {
+            plugin.getManager(AbstractDataManager.class).getDatabaseConnector().connect(c -> {
+                try (PreparedStatement statement = c.prepareStatement("UPDATE `userdata` SET `name` = ? WHERE `uuid` = ?")) {
+                    statement.setString(1, newName);
+                    statement.setString(2, uuid.toString());
+                    statement.executeUpdate();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }, pool);
+    }
+
     public void createData(UserData data) {
         CompletableFuture.runAsync(() -> {
             plugin.getManager(AbstractDataManager.class).getDatabaseConnector().connect(c -> {
