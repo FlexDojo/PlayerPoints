@@ -238,7 +238,6 @@ public class PlayerPointsAPI {
         return dataManager.setPoints(playerId, amount).join();
     }
 
-
     public boolean setCommand(@NotNull UUID playerId, int amount) {
         Objects.requireNonNull(playerId);
 

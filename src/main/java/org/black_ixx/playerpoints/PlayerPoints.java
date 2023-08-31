@@ -22,6 +22,7 @@ import org.black_ixx.playerpoints.treasury.PlayerPointsTreasuryLayer;
 import org.black_ixx.playerpoints.util.PointsUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 
 /**
@@ -39,6 +40,8 @@ public class PlayerPoints extends RosePlugin {
     @Getter
     private RedisImple redis;
     private PointsPlaceholderExpansion placeholderExpansion;
+    @Getter
+    private Economy vaultHook;
 
     public PlayerPoints() {
         super(80745, 10234, ConfigurationManager.class, DataManager.class, LocaleManager.class, null);
@@ -52,6 +55,8 @@ public class PlayerPoints extends RosePlugin {
 
         this.userLogSQL = new UserLogSQL();
         userLogSQL.createUserLogTable();
+
+        setupVault();
 
         getManager(DataManager.class).loadOnlinePlayers();
 
@@ -174,4 +179,16 @@ public class PlayerPoints extends RosePlugin {
     public UserLogSQL getUserLogSQL() {
         return this.userLogSQL;
     }
+
+    private void setupVault() {
+        if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
+            return;
+        }
+        RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return;
+        }
+        vaultHook = rsp.getProvider();
+    }
+
 }

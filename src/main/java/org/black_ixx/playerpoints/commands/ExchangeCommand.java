@@ -11,18 +11,14 @@ import org.black_ixx.playerpoints.util.TransactionType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Collections;
 import java.util.List;
 
 public class ExchangeCommand extends PointsCommand {
 
-    private Economy economy;
-
     public ExchangeCommand() {
         super("exchange", CommandManager.CommandAliases.EXCHANGE);
-        setupEconomy();
     }
 
 
@@ -42,7 +38,7 @@ public class ExchangeCommand extends PointsCommand {
 
             int amount;
 
-            double balance = economy.getBalance(Bukkit.getOfflinePlayer(player.getUuid()));
+            double balance = plugin.getVaultHook().getBalance(Bukkit.getOfflinePlayer(player.getUuid()));
 
             Player onlineTarget = Bukkit.getPlayer(player.getUuid());
 
@@ -73,7 +69,7 @@ public class ExchangeCommand extends PointsCommand {
 
             if (plugin.getAPI().exchangeCommand(player.getUuid(), fluxAmount)) {
 
-                economy.withdrawPlayer(Bukkit.getOfflinePlayer(player.getUuid()), amount);
+                plugin.getVaultHook().withdrawPlayer(Bukkit.getOfflinePlayer(player.getUuid()), amount);
 
 
                 // Send message to sender
@@ -125,17 +121,6 @@ public class ExchangeCommand extends PointsCommand {
         return (int) toFlux;
     }
 
-    private void setupEconomy() {
-        if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
-            return;
-        }
-        RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return;
-        }
-        economy = rsp.getProvider();
-    }
-
     // format amount 1.000.000 to M, K, B etc
     public String formatAmount(double amount) {
         if (amount >= 1000000000) {
@@ -148,6 +133,5 @@ public class ExchangeCommand extends PointsCommand {
             return String.valueOf(amount);
         }
     }
-
 
 }
