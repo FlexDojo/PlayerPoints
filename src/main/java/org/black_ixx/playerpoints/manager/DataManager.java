@@ -135,6 +135,11 @@ public class DataManager extends AbstractDataManager implements Listener {
         return updatePoints(getUserData(name), points, 1);
     }
 
+    public CompletableFuture<int[]> getAllPoints() {
+        return plugin.getQueries().getTotalPointsAndPlayers();
+    }
+
+
     private CompletableFuture<Boolean> updatePoints(CompletableFuture<UserData> userData, double points, int action) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         if (userData == null) {
@@ -413,4 +418,5 @@ public class DataManager extends AbstractDataManager implements Listener {
         return updatePoints(getUserData(playerId), newBalance, 0);
 
     }
+
 }

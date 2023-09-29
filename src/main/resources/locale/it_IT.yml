@@ -1,26 +1,21 @@
+# en_US translation by Esophose
 # Plugin Message Prefix
-prefix: '&7[<g:#E8A230:#ECD32D>{{PLUGIN_NAME}}&7] '
+prefix: ''
 
 # Currency
-currency-singular: 'Point'
-currency-plural: 'Points'
-exchange-currency-singular: 'Corona'
-exchange-currency-plural: 'Corone'
-currency-separator: ','
-currency-decimal: '.'
-number-abbreviation-thousands: 'k'
-number-abbreviation-millions: 'm'
-number-abbreviation-billions: 'b'
+currency-singular: '&3Flux 🌊'
+currency-plural: '&3Flux 🌊'
+currency-separator: .
+exchange-currency-singular: '&eCorona &6♛'
+exchange-currency-plural: '&eCorone &6♛'
 
 # Misc
-no-permission: '&cYou don''t have permission for that!'
-no-console: '&cOnly players may execute this command.'
+no-permission: '&cNon hai il permesso!'
+no-console: '&cSolo i giocatori possono eseguire questo comando.'
 invalid-amount: '&cAmount must be a positive whole number.'
 unknown-player: '&cPlayer could not be found: &b%player%'
 unknown-command: '&cUnknown command: &b%input%'
 votifier-voted: '&eThanks for voting on %service%! &b%amount% &ehas been added to your balance.'
-leaderboard-empty-entry: 'This could be you!'
-command-cooldown: '&cPlease wait before using that command again.'
 
 # Base Command Message
 base-command-color: '&e'
@@ -32,9 +27,9 @@ command-help-title: '&eAvailable Commands:'
 
 # Give Command
 command-give-description: '&8 - &d/points give &7- Give a player points'
-command-give-usage: '&cUsage: &e/points give <player> <amount>'
-command-give-success: '&b%player% &awas given &b%amount% &a%currency%.'
-command-give-received: '&eYou have received &b%amount% &e%currency%.'
+command-give-usage: '&8[&b🌊 &3Flux&8] &cUsage: &e/points give <player> <amount>'
+command-give-success: '&8[&b🌊 &3Flux&8] &b%player% &awas given &b%amount% &e%currency%.'
+command-give-received: '&8[&b🌊 &3Flux&8] &7Hai ricevuto &e%amount% &3Flux 🌊&7.'
 
 # Give All Command
 command-giveall-description: '&8 - &d/points giveall &7- Gives all online players points'
@@ -45,35 +40,39 @@ command-giveall-success: '&aGave &b%amount% &a%currency% to all online players.'
 command-take-description: '&8 - &d/points take &7- Take points from a player'
 command-take-usage: '&cUsage: &e/points take <player> <amount>'
 command-take-success: '&aTook &b%amount% &a%currency% from &b%player%&a.'
+command-take-player: '&7Hai speso &e%amount% &3Flux 🌊&7.'
 command-take-lacking-funds: '&b%player% &cdoes not have enough %currency% for that, so their balance was set to 0.'
 
 # Exchange Command
 command-exchange-description: '&8 - &d/points exchange &7- Take points from a player'
 command-exchange-usage: '&cUsage: &e/points exchange <player> <amount>'
-command-exchange-success: '&aTook %amount-vault% from &b%player%&a. &e(Exchanged %amount-vault% -> %amount-flux%)'
-command-exchange-received: '&eYou were taken &b%amount-vault% by &b%player%&e. &e(Exchanged %amount-vault% -> %amount-flux%)'
-command-exchange-lacking-funds: '&b%player% &cdoes not have enough %vault% for that, so their balance was set to 0.'
-command-exchange-not-enough: '&cYou do not have enough %vault% for that.'
+command-exchange-success: |-
+  &8[&b🌊 &3Flux&8] | &3Broker
+  &c[-] &7Ti sono state rimosse &e%amount-vault%
+  &aHai scambiato &e%amount-vault% &a-> &b%amount-flux%
+command-exchange-not-enough: '&8[&b🌊 &3Flux&8] &cNon hai &e%amount-vault% &cper poter eseguire questo scambio.'
+command-exchange-not-enough-console: '&8[&b🌊 &3Flux&8] &b%target% &7non ha &e%amount-vault% &7!'
+command-exchange-success-console: '&8[&b🌊 &3Flux&8] &7Scambiati &e%amount-vault%&7 per &b%amount-flux% a &b%target%&7.'
 
 # Look Command
 command-look-description: '&8 - &d/points look &7- View a player''s points'
 command-look-usage: '&cUsage: &e/points look <player>'
 command-look-success: '&b%player% &ehas &b%amount% &e%currency%.'
 
-command-total-success: '&eThere are &b%amount% &e%currency% in circulation on the server calculated from &b%players% &eplayers.'
+# Total Command
+command-total-success: '&8[&b🌊 &3Flux&8] &3%amount% %currency%&7 totali su &6%players% giocatori&7.'
 
 # Pay Command
 command-pay-description: '&8 - &d/points pay &7- Pay a player'
-command-pay-usage: '&cUsage: &e/points pay <player> <amount>'
-command-pay-self: '&cYou cannot pay yourself!'
-command-pay-sent: '&aYou paid &b%player% %amount% &a%currency%.'
-command-pay-received: '&eYou were paid &b%amount% &e%currency% by &b%player%&e.'
-command-pay-lacking-funds: '&cYou do not have enough %currency% for that.'
+command-pay-usage: '&cUtilizza: &e/sp-pay <player> <quantità>'
+command-pay-sent: '&8[&b🌊 &3Flux&8] Hai dato &e%amount% &3Flux 🌊 &7a &b%player%&7.'
+command-pay-received: '&8[&b🌊 &3Flux&8] &b%player% &7ti ha dato &e%amount% &3Flux 🌊&7.'
+command-pay-lacking-funds: '&8[&b🌊 &3Flux&8] &cNon hai abbastanza &3Flux 🌊&7.'
 
 # Set Command
-command-set-description: '&8 - &d/points set &7- Set a player''s points'
-command-set-usage: '&cUsage: &e/points set <player> <amount>'
-command-set-success: '&aSet the %currency% of &b%player% &ato &b%amount%&a.'
+command-set-description: '&8[&b🌊 &3Flux&8] &8 - &d/points set &7- Set a player''s points'
+command-set-usage: '&8[&b🌊 &3Flux&8] &cUsage: &e/points set <player> <amount>'
+command-set-success: '&8[&b🌊 &3Flux&8] &aSet the %currency% of &b%player% &ato &b%amount%&a.'
 
 # Reset Command
 command-reset-description: '&8 - &d/points reset &7- Reset a player''s points'
@@ -83,13 +82,13 @@ command-reset-success: '&aReset the %currency% for &b%player%&a.'
 # Me Command
 command-me-description: '&8 - &d/points me &7- View your points'
 command-me-usage: '&cUsage: &d/points me'
-command-me-success: '&eYou have &b%amount% &e%currency%.'
+command-me-success: '&8[&b🌊 &3Flux&8] &7Al momento hai &e%amount% &3Flux 🌊&7.'
 
 # Lead Command
-command-lead-description: '&8 - &d/points lead &7- View the leaderboard'
-command-lead-usage: '&cUsage: &e/points lead [next|prev|#]'
-command-lead-title: '&eLeaderboard &7(Page #%page%/%pages%)'
-command-lead-entry: '&b%position%). &e%player% &7- &6%amount% %currency%'
+command-lead-description: '&8 - &d/points top &7- Vedi la leaderboard'
+command-lead-usage: '&cUsage: &e/points top [next|prev|#]'
+command-lead-title: '&8[&b🌊 &3Flux&8] - &6TOP &7(&8Pag. #%page%/%pages%&7)'
+command-lead-entry: '&7%position%). &f%player% &7- &6%amount% &3🌊'
 
 # Broadcast Command
 command-broadcast-description: '&8 - &d/points broadcast &7- Broadcast a player''s points'
@@ -118,7 +117,7 @@ command-import-warning: '&cNotice: This operation will delete all data from the 
 command-convert-description: '&8 - &d/points convert &7- Loads currency data from another plugin'
 command-convert-usage: '&cUsage: &e/points convert <plugin>'
 command-convert-invalid: '&b%plugin% &cis not a convertible currency plugin name.'
-command-convert-success: '&aCurrency data from &b%plugin% &ais being converted.'
+command-convert-success: '&aCurrency data from &b%plugin% &ahas been converted.'
 command-convert-failure: '&cAn error occurred while attempting to convert the data. Please check your console and report any errors to the PlayerPoints plugin author.'
 command-convert-warning: '&cNotice: This operation will delete all data from the active database and replace it with the data from &b%plugin%&c. &cIf you are absolutely sure about this, use &b/points convert %plugin% confirm&c.'
 
@@ -131,3 +130,12 @@ command-importlegacy-only-mysql: '&cThis command is only available when you have
 
 # Version Command
 command-version-description: '&8 - &d/points version &7- Display the version info for PlayerPoints'
+currency-decimal: .
+number-abbreviation-thousands: k
+number-abbreviation-millions: m
+number-abbreviation-billions: b
+leaderboard-empty-entry: This could be you!
+command-cooldown: '&cPlease wait before using that command again.'
+command-pay-self: '&cYou cannot pay yourself!'
+command-exchange-received: '&eYou were taken &b%amount-vault% by &b%player%&e. &e(Exchanged %amount-vault% -> %amount-flux%)'
+command-exchange-lacking-funds: '&b%player% &cdoes not have enough %vault% for that, so their balance was set to 0.'

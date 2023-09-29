@@ -189,5 +189,29 @@ public class Queries {
         return future;
     }
 
+    public CompletableFuture<int[]> getTotalPointsAndPlayers() {
+        CompletableFuture<int[]> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> plugin.getManager(AbstractDataManager.class).getDatabaseConnector().connect(c -> {
+            try (PreparedStatement statement = c.prepareStatement("SELECT SUM(`points`), COUNT(*) FROM `userdata` WHERE `points` > 0")) {
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    int totalPoints = resultSet.getInt(1);
+                    int totalPlayers = resultSet.getInt(2);
+                    future.complete(new int[]{totalPoints, totalPlayers});
+                } else {
+                    // No results found, complete the future with 0 for both points and players
+                    future.complete(new int[]{0, 0});
+                }
+            } catch (Exception e) {
+                // Handle exceptions properly, log or rethrow as necessary
+                e.printStackTrace(); // Check this output in your console
+                future.completeExceptionally(e); // Complete the future exceptionally in case of error
+            }
+        }), pool);
+        return future;
+    }
+
+
+
 
 }

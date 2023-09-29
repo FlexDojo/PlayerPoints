@@ -38,7 +38,7 @@ public class CommandManager extends Manager {
         SET,
         TAKE,
         VERSION,
-        EXCHANGE;
+        EXCHANGE, TOTAL;
 
         private List<String> aliases;
 
