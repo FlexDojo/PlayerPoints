@@ -9,7 +9,7 @@ plugins {
 sourceCompatibility = 14
 targetCompatibility = 14
 group = 'org.black_ixx'
-version = '3.2.5'
+version = '3.2.6'
 
 repositories {
     mavenCentral()
